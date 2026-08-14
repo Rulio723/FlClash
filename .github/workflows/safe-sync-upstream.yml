@@ -51,6 +51,12 @@ jobs:
             exit 1
           fi
 
+          upstream_default=$(git ls-remote --symref upstream HEAD | awk '/^ref:/ { sub("refs/heads/", "", $2); print $2; exit }')
+          if [[ "${upstream_default}" != "${UPSTREAM_BRANCH}" ]]; then
+            echo "::error::Upstream default branch is ${upstream_default}, not ${UPSTREAM_BRANCH}. Sync blocked."
+            exit 1
+          fi
+
           if ! git fetch --no-tags upstream "${UPSTREAM_BRANCH}"; then
             echo "::error::Unable to fetch upstream. Sync blocked."
             exit 1
@@ -157,7 +163,9 @@ jobs:
 
           echo "Safety checks passed."
 
-      - name: Merge safe upstream changes
+      - name: Sync safe upstream changes to main
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -169,11 +177,14 @@ jobs:
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Use GitHub's fork-sync endpoint so upstream workflow-file updates
+          # can be merged without granting a separate personal token.
+          response=$(gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${GITHUB_REPOSITORY}/merge-upstream" \
+            -f branch="${FORK_BRANCH}")
 
-          # A conflict stops the job before push, preserving the fork.
-          git merge --no-edit "${upstream_ref}"
-          git push origin "HEAD:${FORK_BRANCH}"
-
-          echo "Upstream changes merged into ${FORK_BRANCH}." >> "${GITHUB_STEP_SUMMARY}"
+          echo "${response}" | jq .
+          echo "Upstream changes merged into ${FORK_BRANCH} through GitHub fork sync." >> "${GITHUB_STEP_SUMMARY}"
