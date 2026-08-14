@@ -163,28 +163,40 @@ jobs:
 
           echo "Safety checks passed."
 
-      - name: Sync safe upstream changes to main
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Apply safe upstream snapshot to main
         shell: bash
         run: |
           set -euo pipefail
 
           upstream_ref="refs/remotes/upstream/${UPSTREAM_BRANCH}"
 
-          if git merge-base --is-ancestor "${upstream_ref}" HEAD; then
-            echo "Fork is already up to date."
+          # GitHub's Actions token cannot update workflow files. Preserve all
+          # workflows in this fork and sync every other path from upstream main.
+          if git diff --quiet HEAD "${upstream_ref}" -- . ':(exclude).github/workflows/**'; then
+            echo "Fork content is already up to date (workflows are preserved locally)."
             exit 0
           fi
 
-          # Use GitHub's fork-sync endpoint so upstream workflow-file updates
-          # can be merged without granting a separate personal token.
-          response=$(gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "/repos/${GITHUB_REPOSITORY}/merge-upstream" \
-            -f branch="${FORK_BRANCH}")
+          mapfile -d '' changed_paths < <(
+            git diff --name-only -z HEAD "${upstream_ref}" -- . ':(exclude).github/workflows/**'
+          )
 
-          echo "${response}" | jq .
-          echo "Upstream changes merged into ${FORK_BRANCH} through GitHub fork sync." >> "${GITHUB_STEP_SUMMARY}"
+          for path in "${changed_paths[@]}"; do
+            if git cat-file -e "${upstream_ref}:${path}" 2>/dev/null; then
+              git restore --source="${upstream_ref}" --staged --worktree -- "${path}"
+            else
+              git rm -f --ignore-unmatch -- "${path}"
+            fi
+          done
+
+          if git diff --cached --quiet; then
+            echo "No non-workflow changes require synchronization."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync main from ${UPSTREAM_REPOSITORY}"
+          git push origin "HEAD:${FORK_BRANCH}"
+
+          echo "Upstream ${UPSTREAM_BRANCH} snapshot applied to ${FORK_BRANCH}; fork workflows were preserved." >> "${GITHUB_STEP_SUMMARY}"
