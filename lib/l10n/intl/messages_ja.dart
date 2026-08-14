@@ -530,6 +530,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "port": MessageLookupByLibrary.simpleMessage("ポート"),
     "portConflictTip": MessageLookupByLibrary.simpleMessage("別のポートを入力してください"),
     "portTip": m21,
+    "portableMode": MessageLookupByLibrary.simpleMessage("ポータブルモード"),
+    "portableModeDesc": MessageLookupByLibrary.simpleMessage(
+      "実行ファイルの隣にアプリデータを保存します",
+    ),
+    "portableModeDisableTip": MessageLookupByLibrary.simpleMessage(
+      "ポータブルモードを終了するには、FlClash を終了してから FlClash.exe と同じ場所にある FlClashData フォルダーを手動で削除してください。",
+    ),
+    "portableModeTip": MessageLookupByLibrary.simpleMessage(
+      "アプリデータを移動して、FlClash を再起動します。",
+    ),
     "preferH3Desc": MessageLookupByLibrary.simpleMessage("DOHのHTTP/3を優先使用"),
     "prerequisites": MessageLookupByLibrary.simpleMessage("Prerequisites"),
     "pressKeyboard": MessageLookupByLibrary.simpleMessage("キーボードを押してください"),

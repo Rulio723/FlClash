@@ -73,6 +73,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         const _LocaleItem(),
         const _ThemeItem(),
         const _BackupItem(),
+        if (system.isWindows) const _PortableModeItem(),
         if (system.isDesktop) const _HotkeyItem(),
         if (system.isWindows) const _LoopbackItem(),
         if (system.isAndroid) const _AccessItem(),
@@ -176,6 +177,37 @@ class _BackupItem extends StatelessWidget {
       title: Text(context.appLocalizations.backupAndRestore),
       subtitle: Text(context.appLocalizations.backupAndRestoreDesc),
       widget: const BackupAndRestore(),
+    );
+  }
+}
+
+class _PortableModeItem extends ConsumerWidget {
+  const _PortableModeItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = appPath.isPortable;
+    final appLocalizations = context.appLocalizations;
+    return ListItem.toggle(
+      leading: const Icon(Icons.folder_copy_outlined),
+      title: Text(appLocalizations.portableMode),
+      subtitle: Text(appLocalizations.portableModeDesc),
+      value: enabled,
+      onChanged: (value) async {
+        if (!value) {
+          globalState.showNotifier(appLocalizations.portableModeDisableTip);
+          return;
+        }
+        final res = await globalState.showMessage(
+          message: TextSpan(text: appLocalizations.portableModeTip),
+        );
+        if (res != true) return;
+        await globalState.safeRun(() {
+          return ref
+              .read(systemActionProvider.notifier)
+              .switchPortableMode(enable: value);
+        }, silence: false);
+      },
     );
   }
 }

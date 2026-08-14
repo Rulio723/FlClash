@@ -666,6 +666,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "Please enter a different port",
     ),
     "portTip": m21,
+    "portableMode": MessageLookupByLibrary.simpleMessage("Portable mode"),
+    "portableModeDesc": MessageLookupByLibrary.simpleMessage(
+      "Store application data beside the executable",
+    ),
+    "portableModeDisableTip": MessageLookupByLibrary.simpleMessage(
+      "To exit portable mode, close FlClash and manually delete the FlClashData folder beside FlClash.exe.",
+    ),
+    "portableModeTip": MessageLookupByLibrary.simpleMessage(
+      "Application data will be moved and FlClash will restart.",
+    ),
     "preferH3Desc": MessageLookupByLibrary.simpleMessage(
       "Prioritize the use of DOH\'s http/3",
     ),

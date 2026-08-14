@@ -10,6 +10,8 @@ Read these files before making changes:
 - [.agents/project.md](.agents/project.md): project overview, versions, and build dependencies.
 - [.agents/commands.md](.agents/commands.md): build, development, code generation, and test commands.
 - [.agents/rules.md](.agents/rules.md): lint, testing, generated-code, and workflow rules.
+- [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md): upstream-update procedure; every upstream refresh must retain or verify the
+  equivalent fix from PR #2237 without rolling back the Clash.Meta submodule.
 
 Read these only when the task touches their area:
 

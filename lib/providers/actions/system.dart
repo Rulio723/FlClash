@@ -68,6 +68,39 @@ class SystemAction extends _$SystemAction {
     }
   }
 
+  Future<void> switchPortableMode({required bool enable}) async {
+    final storage = await appPath.portableStorage;
+    if (enable == await storage.isEnabled) return;
+    await preferences.saveConfig(ref.read(configProvider));
+    await Future.wait([
+      if (macOS != null) macOS!.updateDns(true),
+      if (proxy != null) proxy!.stopProxy(),
+      coreController.close(),
+    ]);
+    await database.close();
+    try {
+      if (enable) {
+        await storage.enable();
+      } else {
+        await storage.disable();
+      }
+    } catch (e, s) {
+      commonPrint.log(
+        'portable mode switch failed: $e\n$s',
+        logLevel: LogLevel.warning,
+      );
+      rethrow;
+    }
+    await _restart();
+  }
+
+  Future<void> _restart() async {
+    await Process.start(Platform.resolvedExecutable, const [
+      restartArgument,
+    ], mode: ProcessStartMode.detached);
+    window?.forceExit();
+  }
+
   Future<void> updateVisible() async {
     final visible = await window?.isVisible;
     if (visible != null && !visible) {

@@ -3269,6 +3269,46 @@ class AppLocalizations {
     );
   }
 
+  /// `Portable mode`
+  String get portableMode {
+    return Intl.message(
+      'Portable mode',
+      name: 'portableMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Store application data beside the executable`
+  String get portableModeDesc {
+    return Intl.message(
+      'Store application data beside the executable',
+      name: 'portableModeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Application data will be moved and FlClash will restart.`
+  String get portableModeTip {
+    return Intl.message(
+      'Application data will be moved and FlClash will restart.',
+      name: 'portableModeTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `To exit portable mode, close FlClash and manually delete the FlClashData folder beside FlClash.exe.`
+  String get portableModeDisableTip {
+    return Intl.message(
+      'To exit portable mode, close FlClash and manually delete the FlClashData folder beside FlClash.exe.',
+      name: 'portableModeDisableTip',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Restore`
   String get restore {
     return Intl.message('Restore', name: 'restore', desc: '', args: []);

@@ -15,15 +15,22 @@ class AppPath {
 
   AppPath._internal() {
     appDirPath = join(dirname(Platform.resolvedExecutable));
-    getApplicationSupportDirectory().then((value) {
-      dataDir.complete(value);
-    });
-    getTemporaryDirectory().then((value) {
-      tempDir.complete(value);
-    });
-    getApplicationCacheDirectory().then((value) {
-      cacheDir.complete(value);
-    });
+    if (isPortable) {
+      final directory = Directory(portableDataPath);
+      dataDir.complete(directory);
+      tempDir.complete(Directory(join(directory.path, 'temp')));
+      cacheDir.complete(Directory(join(directory.path, 'cache')));
+    } else {
+      getApplicationSupportDirectory().then((value) {
+        dataDir.complete(value);
+      });
+      getTemporaryDirectory().then((value) {
+        tempDir.complete(value);
+      });
+      getApplicationCacheDirectory().then((value) {
+        cacheDir.complete(value);
+      });
+    }
   }
 
   factory AppPath() {
@@ -38,6 +45,25 @@ class AppPath {
   String get executableDirPath {
     final currentExecutablePath = Platform.resolvedExecutable;
     return dirname(currentExecutablePath);
+  }
+
+  String get portableDataPath =>
+      join(executableDirPath, portableDataDirectoryName);
+
+  String get portableModeFilePath =>
+      join(portableDataPath, portableModeFileName);
+
+  bool get isPortable =>
+      system.isWindows && File(portableModeFilePath).existsSync();
+
+  Future<PortableStorage> get portableStorage async {
+    final applicationSupportDirectory = await getApplicationSupportDirectory();
+    final applicationCacheDirectory = await getApplicationCacheDirectory();
+    return PortableStorage(
+      executableDirPath: executableDirPath,
+      applicationSupportPath: applicationSupportDirectory.path,
+      applicationCachePath: applicationCacheDirectory.path,
+    );
   }
 
   String get corePath {

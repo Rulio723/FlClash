@@ -8,16 +8,22 @@ import 'constant.dart';
 
 class Preferences {
   static Preferences? _instance;
-  Completer<SharedPreferences?> sharedPreferencesCompleter = Completer();
+  Future<SharedPreferences?>? _sharedPreferences;
 
-  Future<bool> get isInit async =>
-      await sharedPreferencesCompleter.future != null;
+  Future<SharedPreferences?> get _instanceFuture =>
+      _sharedPreferences ??= _loadInstance();
 
-  Preferences._internal() {
-    SharedPreferences.getInstance()
-        .then((value) => sharedPreferencesCompleter.complete(value))
-        .onError((_, _) => sharedPreferencesCompleter.complete(null));
+  Future<SharedPreferences?> _loadInstance() async {
+    try {
+      return await SharedPreferences.getInstance();
+    } catch (_) {
+      return null;
+    }
   }
+
+  Future<bool> get isInit async => await _instanceFuture != null;
+
+  Preferences._internal();
 
   factory Preferences() {
     _instance ??= Preferences._internal();
@@ -25,23 +31,23 @@ class Preferences {
   }
 
   Future<int> getVersion() async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _instanceFuture;
     return preferences?.getInt('version') ?? 0;
   }
 
   Future<void> setVersion(int version) async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _instanceFuture;
     await preferences?.setInt('version', version);
   }
 
   Future<void> saveShareState(SharedState shareState) async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _instanceFuture;
     await preferences?.setString('sharedState', json.encode(shareState));
   }
 
   Future<Map<String, Object?>?> getConfigMap() async {
     try {
-      final preferences = await sharedPreferencesCompleter.future;
+      final preferences = await _instanceFuture;
       final configString = preferences?.getString(configKey);
       if (configString == null) return null;
       final Map<String, Object?>? configMap = json.decode(configString);
@@ -53,7 +59,7 @@ class Preferences {
 
   Future<Map<String, Object?>?> getClashConfigMap() async {
     try {
-      final preferences = await sharedPreferencesCompleter.future;
+      final preferences = await _instanceFuture;
       final clashConfigString = preferences?.getString(clashConfigKey);
       if (clashConfigString == null) return null;
       return json.decode(clashConfigString);
@@ -64,7 +70,7 @@ class Preferences {
 
   Future<void> clearClashConfig() async {
     try {
-      final preferences = await sharedPreferencesCompleter.future;
+      final preferences = await _instanceFuture;
       await preferences?.remove(clashConfigKey);
       return;
     } catch (_) {
@@ -81,12 +87,12 @@ class Preferences {
   }
 
   Future<bool> saveConfig(Config config) async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _instanceFuture;
     return preferences?.setString(configKey, json.encode(config)) ?? false;
   }
 
   Future<void> clearPreferences() async {
-    final sharedPreferencesIns = await sharedPreferencesCompleter.future;
+    final sharedPreferencesIns = await _instanceFuture;
     await sharedPreferencesIns?.clear();
   }
 }

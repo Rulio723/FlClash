@@ -464,6 +464,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "port": MessageLookupByLibrary.simpleMessage("端口"),
     "portConflictTip": MessageLookupByLibrary.simpleMessage("请输入不同的端口"),
     "portTip": m21,
+    "portableMode": MessageLookupByLibrary.simpleMessage("便携模式"),
+    "portableModeDesc": MessageLookupByLibrary.simpleMessage("将应用数据存储在软件目录中"),
+    "portableModeDisableTip": MessageLookupByLibrary.simpleMessage(
+      "如需退出便携模式，请退出 FlClash 后，手动删除 FlClash.exe 同目录下的 FlClashData 文件夹即可。",
+    ),
+    "portableModeTip": MessageLookupByLibrary.simpleMessage(
+      "应用数据将被移动，FlClash 会自动重启。",
+    ),
     "preferH3Desc": MessageLookupByLibrary.simpleMessage("优先使用DOH的http/3"),
     "prerequisites": MessageLookupByLibrary.simpleMessage("前置条件"),
     "pressKeyboard": MessageLookupByLibrary.simpleMessage("请按下按键"),

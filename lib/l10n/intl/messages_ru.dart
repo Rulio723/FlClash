@@ -701,6 +701,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "Введите другой порт",
     ),
     "portTip": m21,
+    "portableMode": MessageLookupByLibrary.simpleMessage("Портативный режим"),
+    "portableModeDesc": MessageLookupByLibrary.simpleMessage(
+      "Хранить данные приложения рядом с исполняемым файлом",
+    ),
+    "portableModeDisableTip": MessageLookupByLibrary.simpleMessage(
+      "Чтобы выйти из портативного режима, закройте FlClash и вручную удалите папку FlClashData рядом с FlClash.exe.",
+    ),
+    "portableModeTip": MessageLookupByLibrary.simpleMessage(
+      "Данные приложения будут перемещены, затем FlClash перезапустится.",
+    ),
     "preferH3Desc": MessageLookupByLibrary.simpleMessage(
       "Приоритетное использование HTTP/3 для DOH",
     ),
