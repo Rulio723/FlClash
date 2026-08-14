@@ -163,40 +163,46 @@ jobs:
 
           echo "Safety checks passed."
 
-      - name: Apply safe upstream snapshot to main
+      - name: Apply exact upstream tree to main
         shell: bash
         run: |
           set -euo pipefail
 
           upstream_ref="refs/remotes/upstream/${UPSTREAM_BRANCH}"
+          sync_index="${RUNNER_TEMP}/safe-upstream-sync.index"
+          rm -f "${sync_index}"
 
-          # GitHub's Actions token cannot update workflow files. Preserve all
-          # workflows in this fork and sync every other path from upstream main.
-          if git diff --quiet HEAD "${upstream_ref}" -- . ':(exclude).github/workflows/**'; then
+          # Start from the exact upstream main tree in a temporary index.
+          GIT_INDEX_FILE="${sync_index}" git read-tree "${upstream_ref}"
+
+          # Remove upstream workflow entries from the temporary index.
+          while IFS= read -r -d '' path; do
+            GIT_INDEX_FILE="${sync_index}" git update-index --force-remove -- "${path}"
+          done < <(GIT_INDEX_FILE="${sync_index}" git ls-files -z -- '.github/workflows')
+
+          # Reinsert this fork's workflow subtree unchanged. The resulting tree
+          # matches upstream main everywhere else, including renames and gitlinks.
+          GIT_INDEX_FILE="${sync_index}" git read-tree \
+            --prefix=.github/workflows/ \
+            HEAD:.github/workflows
+
+          sync_tree=$(GIT_INDEX_FILE="${sync_index}" git write-tree)
+          head_tree=$(git rev-parse 'HEAD^{tree}')
+
+          if [[ "${sync_tree}" == "${head_tree}" ]]; then
             echo "Fork content is already up to date (workflows are preserved locally)."
-            exit 0
-          fi
-
-          mapfile -d '' changed_paths < <(
-            git diff --name-only -z HEAD "${upstream_ref}" -- . ':(exclude).github/workflows/**'
-          )
-
-          for path in "${changed_paths[@]}"; do
-            if git cat-file -e "${upstream_ref}:${path}" 2>/dev/null; then
-              git restore --source="${upstream_ref}" --staged --worktree -- "${path}"
-            else
-              git rm -f --ignore-unmatch -- "${path}"
-            fi
-          done
-
-          if git diff --cached --quiet; then
-            echo "No non-workflow changes require synchronization."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: sync main from ${UPSTREAM_REPOSITORY}"
+
+          new_commit=$(
+            printf 'chore: sync main from %s\n' "${UPSTREAM_REPOSITORY}" |
+              git commit-tree "${sync_tree}" -p HEAD
+          )
+
+          git reset --hard "${new_commit}"
           git push origin "HEAD:${FORK_BRANCH}"
 
-          echo "Upstream ${UPSTREAM_BRANCH} snapshot applied to ${FORK_BRANCH}; fork workflows were preserved." >> "${GITHUB_STEP_SUMMARY}"
+          echo "Upstream ${UPSTREAM_BRANCH} tree applied exactly to ${FORK_BRANCH}; fork workflows were preserved." >> "${GITHUB_STEP_SUMMARY}"
