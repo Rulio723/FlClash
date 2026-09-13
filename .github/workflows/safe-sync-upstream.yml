@@ -25,9 +25,6 @@ env:
   MAX_DELETED_PERCENT: "15"
   MIN_REMAINING_BYTES_PERCENT: "60"
 
-  # One-time reviewed upstream v0.8.97 large refactor.
-  ALLOWED_LARGE_DELETE_COMMIT: "db0388057962e83958dd355bc41fc22bfa1e901a"
-
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -130,25 +127,18 @@ jobs:
           } >> "${GITHUB_STEP_SUMMARY}"
 
           blocked=0
-          upstream_commit=$(git rev-parse "${upstream_ref}")
-          large_delete_allowed=0
-
-          if [[ "${upstream_commit}" == "${ALLOWED_LARGE_DELETE_COMMIT}" ]]; then
-            echo "::warning::Reviewed FlClash v0.8.97 refactor is allowed to exceed deletion thresholds once."
-            large_delete_allowed=1
-          fi
 
           if (( upstream_files < MIN_UPSTREAM_FILES )); then
             echo "::error::Upstream contains only ${upstream_files} files; minimum is ${MIN_UPSTREAM_FILES}."
             blocked=1
           fi
 
-          if (( large_delete_allowed == 0 && deleted_files > MAX_DELETED_FILES )); then
+          if (( deleted_files > MAX_DELETED_FILES )); then
             echo "::error::Upstream would delete ${deleted_files} files; maximum is ${MAX_DELETED_FILES}."
             blocked=1
           fi
 
-          if (( large_delete_allowed == 0 && deleted_percent > MAX_DELETED_PERCENT )); then
+          if (( deleted_percent > MAX_DELETED_PERCENT )); then
             echo "::error::Upstream would delete ${deleted_percent}% of files; maximum is ${MAX_DELETED_PERCENT}%."
             blocked=1
           fi
